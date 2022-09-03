@@ -163,9 +163,9 @@ then
    sed -i "s/Yes/$writeable/g" /TopStordata/smb.${name}
    chmod 770 /$pool/$name
    echo running cifs.sh=$pool $name $ipaddr $ipsubnet home >> /root/volactivateparamHome
-   echo /TopStor/cifs.sh $pool $name $ipaddr $ipsubnet home 
+   echo /TopStor/cifs.sh $pool $name $ipaddr $ipsubnet cifs 
    yes | cp /TopStordata/smb.$name /$pool/
-   /TopStor/cifs.sh $pool $name $ipaddr $ipsubnet Home 
+   /TopStor/cifs.sh $pool $name $ipaddr $ipsubnet cifs 
    echo finished cifs.sh >> /root/volactivateparamHome
    echo writve=$writev
    setfacl -b /$pool/$name
@@ -194,9 +194,19 @@ then
    for grp in $writev; do setfacl -m g:$grp:rwx /$pool/$name; done
   fi
   /pace/etcdput.py volumes/HOME/$myhost/$pool/$name $volsvalue
+  stamp=`date +%s`
+  leaderall=` ./etcdget.py leader --prefix `
+  leader=`echo $leaderall | awk -F'/' '{print $2}' | awk -F"'" '{print $1}'`
+  ETCDCTL_API=3 /pace/etcdput.py sync/volumes/${pool}_$name/request volumes_$stamp
+  ETCDCTL_API=3 /pace/etcdput.py sync/volumes/${pool}_$name/request/$leader volumes_$stamp
   if [ $volhost != $myhost ];
   then
    /pace/etcddel.py volumes/HOME/$volhost/$pool/$name
+   stamp=`date +%s`
+   leaderall=` ./etcdget.py leader --prefix `
+   leader=`echo $leaderall | awk -F'/' '{print $2}' | awk -F"'" '{print $1}'`
+   ETCDCTL_API=3 /pace/etcdput.py sync/volumes/${pool}_$name/request volumes_$stamp
+   ETCDCTL_API=3 /pace/etcdput.py sync/volumes/${pool}_$name/request/$leader volumes_$stamp
   fi
  done
  echo finished setting volumes regestry >> /root/volactivateparamHome

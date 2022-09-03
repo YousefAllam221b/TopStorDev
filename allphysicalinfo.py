@@ -2,6 +2,7 @@
 from logqueue import queuethis
 from etcdgetpy import etcdget as get
 from ast import literal_eval as mtuple
+from raidrank import getraidrank
 import subprocess, copy
 from levelthis import levelthis
 import sys
@@ -22,6 +23,7 @@ def getsnapperiods(voldict):
    periodsdict[leftper[4]]['volume']=vol
    periodsdict[leftper[4]]['periodtype']=leftper[1]
    periodsdict[leftper[4]]['id']=leftper[4]
+   periodsdict[leftper[4]]['receiver']=rightper[-1]
    if 'Minutely' in leftper[1]: 
     periodsdict[leftper[4]]['keep']=rightper[4].split('.')[1]
     periodsdict[leftper[4]]['every']=rightper[4].split('.')[2]
@@ -41,8 +43,9 @@ def getsnapperiods(voldict):
     periodsdict[leftper[4]]['every']=rightper[3].split('.')[4].split('%')[0]
  return (periodsdict,voldict)
 
-def getall(*args):
- alldsks = args[0]
+def getall(alldsks='0', *args):
+ if alldsks == '0':
+  alldsks = get('host','current')
  hostsdict = dict()
  poolsdict = dict()
  raidsdict = dict()
@@ -62,6 +65,11 @@ def getall(*args):
   voldict = {'name': vol[1].split('/')[1], 'pool': vol[1].split('/')[0], 'groups': '', 'ipaddress': '', 'Subnet': '', 'prot': '', 'fullname': '', 'host': '', 'creation': '', 'time': '', 'used': 0, 'quota': 0, 'usedbysnapshots': 0, 'refcompressratio': '1.0x', 'snapperiod': [], 'snapshots': []}
   if vol[0].split('/')[1] == 'CIFS' or vol[0].split('/')[1] == 'HOME' :
    voldict['groups'] = vol[1].split('/')[4]
+   if 'DOMAIN' in voldict['groups']:
+    voldict['groups']= 'DOMAIN'
+    voldict['type']='DOMAIN'
+   else:
+    voldict['type']='WorkGroup'
    voldict['ipaddress'] = vol[1].split('/')[7] 
    voldict['Subnet'] = vol[1].split('/')[8]
    voldict['prot'] = vol[0].split('/')[1]
@@ -82,7 +90,10 @@ def getall(*args):
    voldict['chappas'] = vol[1].split('/')[7]
    voldict['prot'] = 'ISCSI'
    volumesdict[voldict['name']] = voldict.copy()
+ 
  for alldsk in alldsks:
+  if alldsk == -1:
+   continue
   host = alldsk[0].split('/')[1]
   pools = mtuple(alldsk[1])
   hostpools = []
@@ -93,6 +104,7 @@ def getall(*args):
    pool['available'] = levelthis(pool['available'])
    pool['alloc'] = levelthis(pool['alloc'])
    pool['empty'] = levelthis(pool['empty'])
+   pool['size'] = levelthis(pool['size'])
    hostpools.append(pool['name'])
    thepool = pool.copy()
    thepool.pop('raidlist',None)
@@ -112,10 +124,12 @@ def getall(*args):
       raidname = raid['name']
     poolraids.append(raidname)
     theraid = raid.copy()
-    theraid.pop('disklist',None)
     raiddisks = []
     raidsdict[raidname] = dict()
     raidsdict[raidname] = theraid.copy()
+    if raidname != 'free':
+     raidsdict[raidname] = getraidrank(raidsdict[raidname],raidsdict[raidname]['disklist'][0],raidsdict[raidname]['disklist'][0])
+    theraid.pop('disklist',None)
     raidsdict[raidname]['disks'] = raiddisks
     raidsdict[raidname]['name'] = raidname 
     for disk in raid['disklist']:
@@ -131,11 +145,12 @@ def getall(*args):
       raiddisks.append(disk['name'])
       if disk['name'] in freedisks:
        raidsdict['free']['disks'].remove(disk['name'])
-  
    poolvolumes = []
    poolsdict[pool['name']]['volumes'] = poolvolumes
    for volume in pool['volumes']:
     volume['used'] = levelthis(volume['used'])
+    volume['available'] = levelthis(volume['available'])
+    volume['referenced'] = levelthis(volume['referenced'],'M')
     if volume['prot'] == 'ISCSI':
      volume['quota'] = volume['used'] 
     else:
@@ -148,7 +163,7 @@ def getall(*args):
     volumesnapshots = []
     volumesnapperiods = []
     for snapshot in volume['snapshots']:
-     snapshot['used'] = levelthis(snapshot['used'],'M')
+     snapshot['used'] = levelthis(snapshot['used'])
      volumesnapshots.append(snapshot['name'])
      snapshotsdict[snapshot['name']] = snapshot.copy() 
     if 'snapperiods' in volume:
@@ -195,7 +210,7 @@ def getall(*args):
  print('#############')
  print('snapperiods',snapperiodsdict) 
  '''
- print('disks',disksdict)
+ print('snapshots',snapshotsdict)
  return {'hosts':hostsdict, 'pools':poolsdict, 'raids':raidsdict, 'disks':disksdict, 'volumes':volumesdict, 'snapshots':snapshotsdict, 'snapperiods':snapperiodsdict}
 
  

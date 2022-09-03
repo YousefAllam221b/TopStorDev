@@ -18,7 +18,7 @@ userreq=` echo $@ | awk '{print $7}'`;
 DG=$pDG;
 hi=`whoami`
 echo start $hi $userreq > /root/volcreate
-ETCDCTL_API=3 /TopStor/logqueue.py VolumeCreateHome running $userreq 
+/TopStor/logqueue.py `basename "$0"` running $userreq 
 echo queuedrunning >> /root/volcreate
 
 privilege="HOME";
@@ -58,7 +58,7 @@ then
  then
   echo here5 >> /root/volcreate
   /TopStor/logmsg.py NFS1006 error $userreq $DG/$name
-  /TopStor/logqueue.py `basename "$0"` stop_canceled $userreq 
+  /TopStor/logqueue.py `basename "$0"` stop $userreq 
   exit
  fi
  /sbin/zfs set prot:kind=HOME $DG/$name
@@ -67,7 +67,12 @@ then
  myhost=`hostname -s`
  echo /pace/etcdput.py volumes/HOME/$myhost/$DG/$name $DG/$name/no/yes/$writev/administrator/yes >> /root/volcreate
  ETCDCTL_API=3 /pace/etcdput.py volumes/HOME/$myhost/$DG/$name $DG/$name/no/yes/$writev/administrator/yes/$ipaddr/$ipsubnet
- /pace/broadcasttolocal.py volumes/HOME/$myhost/$DG/$name $DG/$name/no/yes/$writev/administrator/yes/$ipaddr/$ipsubnet 
+  stamp=`date +%s`
+  leaderall=` ./etcdget.py leader --prefix `
+  leader=`echo $leaderall | awk -F'/' '{print $2}' | awk -F"'" '{print $1}'`
+  ETCDCTL_API=3 /pace/etcdput.py sync/volumes/${DG}_$name/request volumes_$stamp
+  ETCDCTL_API=3 /pace/etcdput.py sync/volumes/${DG}_$name/request/$leader volumes_$stamp
+ #/pace/broadcasttolocal.py volumes/HOME/$myhost/$DG/$name $DG/$name/no/yes/$writev/administrator/yes/$ipaddr/$ipsubnet 
  ./VolumeActivateHome vol=$name user=$userreq
  /pace/putzpool.py 
  /TopStor/SnapshotCreateHourlytrend $DG $name 0 24 7 system 

@@ -1,6 +1,6 @@
 #!/bin/python3.6
 from allphysicalinfo import getall 
-import sys, subprocess
+import sys, subprocess, json
 from ast import literal_eval as mtuple
 from etcdget2 import etcdgetjson
 from etcdgetpy import etcdget  as get
@@ -82,8 +82,8 @@ def takedecision(allmsgs):
  for disk in allinfo['disks']:
   if disk in str(faultydisks):
    continue
-  if all(x not in allinfo['disks'][disk]['status'] for x in ['ONLINE','free']):
-   put('disks/FAULT/'+disk, allinfo['disks'][disk]['status'])
+  #if all(x not in allinfo['disks'][disk]['status'] for x in ['ONLINE','free']):
+  # put('disks/FAULT/'+disk, allinfo['disks'][disk]['status'])
  return
 
 def allcompare():
@@ -109,7 +109,8 @@ def allcompare():
         changepot[key][element] = dict() 
        changepot[key][element][feature] = (last[key][element][feature], current[key][element][feature])
      except:
-      dels('host','lasit')
+      #dels('host','lasit')
+      pass
     last[key].pop(element,None)
   if key not in changepot:
    last.pop(key)
@@ -145,7 +146,7 @@ def replacedisks():
  for disk in faultydisks:
   diskname = disk[0].split('/')[2]
   if diskname not in allinfo['disks']:
-   dels('disks/FAULT', diskname)
+   #dels('disks/FAULT', diskname)
    continue
   raid = allinfo['disks'][diskname]['raid']
   raidinfo = allinfo['raids'][raid]
@@ -162,7 +163,7 @@ def checkhosts():
  allinfo = getall(alldsks)
  lastalldsks = get('hosts','last')
  if lastalldsks[0] == -1:
-  put('hosts/last',str(allinfo) )
+  put('hosts/last',json.dumps(allinfo) )
   return
  alllastinfo = mtuple(lastalldsks[0][1])
  allchange = allcompare() 
@@ -181,7 +182,7 @@ def checkhosts():
   print('found a change')
  allmsgs = parsechange()
  takedecision(allmsgs)
- put('hosts/last',str(allinfo))
+ put('hosts/last',json.dumps(allinfo))
  #replacedisks()
  return allchange
 

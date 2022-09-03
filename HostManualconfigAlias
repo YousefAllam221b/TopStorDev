@@ -1,0 +1,18 @@
+#!/bin/sh
+export ETCDCTL_API=3
+cd /TopStor/
+echo $@ > ~/alias
+aliast='alias'
+hostname=`hostname -s`
+dev='enp0s8'
+web='/var/www/html/des20/Data/HostManualconfigstatus.log';
+logging='/var/www/html/des20/Data/currentinfo2.log';
+runningpools='/pacedata/pools/runningpools';
+glog='/var/www/html/des20/Data/TopStor.log';
+txtres='/TopStordata/'`basename $0`'.txt'
+gateway=`ETCDCTL_API=3 /TopStor/etcdget.py gw/$hostname`
+myhost=$hostname
+stamp=`date +%s%N`
+./etcdput.py sync/$aliast/Add_nothing_nothing/request/$myhost ${aliast}_$stamp 
+./etcdput.py sync/$aliast/Add_nothing_nothing/request ${aliast}_$stamp 
+#./broadcasttolocal.py sync/$aliast/$myhost $stamp 
