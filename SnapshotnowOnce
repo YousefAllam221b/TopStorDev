@@ -4,18 +4,77 @@ cd /TopStor
 web='/var/www/html/des20/Data/statusglobal.log';
 txtres='/TopStordata/'`basename $0`$userreq'.txt'
 myhost=$myhost;
-vol=`echo $@ | awk '{print $1}'| awk -F '/' '{print $1}'`;
-name=`echo $@ | awk '{print $1}' | awk -F '/' '{print $2}'`;
-pool=`echo $@ | awk '{print $2}'`;
+pool=`echo $@ | awk '{print $1}'`;
+vol=`echo $@ | awk '{print $2}'`;
+name=`echo $@ | awk '{print $3}'` ;
+receiver=`echo $@ | awk '{print $4}'` ;
+userreq=`echo $@ | awk '{print $5}'` ;
 stamp=`date +%s`;
-echo /sbin/zfs snapshot $pool/$vol@${name}.$stamp
-/sbin/zfs snapshot $pool/$vol@${name}.$stamp
+snapshot=$pool'/'$vol'@'${name}'.'$stamp
+shortreceiver=`echo $receiver | awk -F'_' '{print $1}'`
+
+leaderall=` ./etcdget.py leader --prefix `
+leader=`echo $leaderall | awk -F'/' '{print $2}' | awk -F"'" '{print $1}'`
+
+echo $receiver | grep NoReceiver
+if [ $? -ne 0 ];
+then 
+ ./logmsg.py Replispacest01 info $userreq $vol $shortreceiver  
+ echo /logmsg.py Replispacest01 info $userreq $vol $shortreceiver  
+else
+ /TopStor/logmsg.py Snap1026 info $userreq $name 
+fi
+zfs snapshot $snapshot 
 if [ $? -ne 0  ]; then
-        echo failed
-        exit 1;
-else 
-timenow=`/usr/bin/date`
-echo OK;
-exit 0
+      echo failed
+      /TopStor/logmsg.py Snap1028 error $userreq $name 
+      exit 1;
+else
+ /TopStor/logmsg.py Snap1030 info $userreq $name 
+fi 
+result='init'
+zfs set snap:type=Once $snapshot 
+echo $receiver | grep NoReceiver 
+if [ $? -ne 0 ];
+then 
+ wiating=1
+ while [ $waiting -eq 1 ];
+ do
+  running=`./etcdget.py running/$receiver`
+  echo $running | grep $receiver
+  if [ $? -eq 0 ];
+  then
+   echo waiting the current replications to finish
+   queue=`ps -ef | grep Snapshotnow | wc -l`
+   if [ $queue -ge 10 ];
+   then
+    ./etcdput.py running/$receiver no
+    exit
+    waiting=0
+   fi
+   sleep 1
+  else
+   waiting=0
+  fi
+ done
+ ./etcdput.py running/$receiver $receiver
+ ./etcdput.py sync/running/____/request running_$stamp
+ ./etcdput.py sync/running/____/request/$leader running_$stamp
+ result=`./replicatenow.py $snapshot $receiver`
+ result=`echo $result | grep 'result_' | awk -F'result_' '{print $2}'`
+ echo .................................................................
+ echo result=$result
+ echo ............................................
+ echo $result | grep 'fail'
+ if [ $? -eq 0 ];
+ then
+  #./logmsg.py Replispacefa01 error $userreq $shortreceiver $vol
+  ./logmsg.py Streamfa01 error $userreq $vol $shortreceiver
+ else
+   ./logmsg.py Replispacesu01 info $userreq $shortreceiver $vol
+ fi 
 fi;
+ ./etcdput.py running/$receiver finish 
+ ./etcdput.py sync/running/____/request running_$stamp
+ ./etcdput.py sync/running/____/request/$leader running_$stamp
 #sleep 2;

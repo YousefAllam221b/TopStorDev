@@ -10,7 +10,7 @@ glog='/var/www/html/des20/Data/TopStor.log';
 username=`echo $@ | awk '{print $1}'`;
 usergroups=`echo $@ | awk  '{print $2}' | sed 's/groups//g' `;
 userreq=`echo $@  | awk '{print $3}'`;
-/TopStor/queuethis.sh `basename "$0"` running $userreq &
+/TopStor/logqueue.py `basename "$0"` running $userreq 
 myhost=`hostname -s`
 myip=`/sbin/pcs resource show CC | grep Attrib | awk -F'ip=' '{print $2}' | awk '{print $1}'`
 stablegrp=""
@@ -18,7 +18,11 @@ privilege="Box_Users";
 contrun=`./privthis.sh $privilege $userreq`;
 if [[ $contrun == 'true' ]]
 then
- /TopStor/logmsg.py Unst1124 info $userreq $username
+ echo 'NoUser' | grep $username
+ if [ $? -ne 0 ];
+ then
+  /TopStor/logmsg.py Unst1124 info $userreq $username
+ fi
 # cgrps=`id -Gn $username | sed "s/$username//g"` 
  usermod -G $usergroups $username
  cgrps=`/pace/etcdgetlocal.py $myip usersigroup $username`
@@ -89,6 +93,10 @@ then
    fi
   fi
  done
- /TopStor/logmsg.py Unsu1124 info $userreq $username
+ echo 'NoUser' | grep $username
+ if [ $? -ne 0 ];
+ then
+  /TopStor/logmsg.py Unsu1124 info $userreq $username
+ fi
 fi 
-/TopStor/queuethis.sh `basename "$0"` finished $userreq &
+/TopStor/logqueue.py `basename "$0"` stop $userreq 
