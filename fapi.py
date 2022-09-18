@@ -110,6 +110,12 @@ def getgroups():
   gid += 1
  return groups
 
+
+@app.before_request
+def before_request():
+    # if user not in mydb:
+    # do(something)
+    abort(404)
 @app.route('/', methods=['GET'])
 def home():
     return '''<h1>Distant Reading Archive</h1>
