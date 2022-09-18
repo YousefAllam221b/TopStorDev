@@ -115,6 +115,7 @@ def getgroups():
 
 @app.before_request
 def before_request():
+  return ' '.join(dir(requests))
   start = time.time()
   if (request.path in requests.keys()):
     if (start - requests[request.path] >= 20):
