@@ -1,4 +1,5 @@
 #!/bin/python3.6
+import re
 import flask, os, Evacuate, subprocess, Joincluster
 from getversions import getversions
 from functools import wraps
@@ -114,7 +115,14 @@ def getgroups():
 
 @app.before_request
 def before_request():
-  requests = {}
+  start = time.time()
+  if (request.path in requests.keys()):
+    if (start - requests[request.path] >= 20):
+      requests[request.path] = start
+    else:
+      return request.path + ' '.join(requests)
+  else:
+    requests[request.path] = start
     
 @app.route('/', methods=['GET'])
 def home():
