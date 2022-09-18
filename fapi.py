@@ -115,7 +115,7 @@ def getgroups():
 @app.before_request
 def before_request():
   if (request.path in requests.keys()):
-    return request.path + ' ' + requests.keys()
+    return request.path
   else:
     requests[request.path] = time.time()
     
