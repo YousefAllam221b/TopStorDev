@@ -114,10 +114,7 @@ def getgroups():
 
 @app.before_request
 def before_request():
-  if (request.path in requests.keys()):
-    return request.path + ' '.join(requests)
-  else:
-    requests[request.path] = time.time()
+  requests = {}
     
 @app.route('/', methods=['GET'])
 def home():
