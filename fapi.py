@@ -49,6 +49,7 @@ for log in logcatalog:
  logdict[msgcode] = log.replace(msgcode+':','').split(' ')
 myhost = hostname()
 allinfo = 0
+import os, time
 
 def getalltime():
  global allinfo,alldsks, getalltimestamp
@@ -113,9 +114,8 @@ def getgroups():
 
 @app.before_request
 def before_request():
-    # if user not in mydb:
-    # do(something)
-    abort(404)
+    
+    abort(request)
 @app.route('/', methods=['GET'])
 def home():
     return '''<h1>Distant Reading Archive</h1>
