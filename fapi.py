@@ -114,8 +114,7 @@ def getgroups():
 
 @app.before_request
 def before_request():
-    
-    abort(request)
+    return request
 @app.route('/', methods=['GET'])
 def home():
     return '''<h1>Distant Reading Archive</h1>
