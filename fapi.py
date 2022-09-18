@@ -50,7 +50,7 @@ for log in logcatalog:
 myhost = hostname()
 allinfo = 0
 import os, time
-
+requests = {}
 def getalltime():
  global allinfo,alldsks, getalltimestamp
  if (getalltimestamp+30) < timestamp():
@@ -114,7 +114,11 @@ def getgroups():
 
 @app.before_request
 def before_request():
-    return request.path 
+  if (request.path in requests.keys()):
+    return request.path + ' ' + requests.keys()
+  else:
+    requests[request.path] = time.time()
+    
 @app.route('/', methods=['GET'])
 def home():
     return '''<h1>Distant Reading Archive</h1>
