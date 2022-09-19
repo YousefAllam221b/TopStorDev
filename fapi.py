@@ -125,6 +125,7 @@ def before_request():
       else:
         return "You already sent a request!"
   else:
+    requests[request.path] = {'time': 0, 'response': 0}
     requests[request.path]['time'] = start
 @app.after_request
 def after_request(response):
