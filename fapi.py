@@ -122,11 +122,14 @@ def before_request():
      requests[request.path]['time'] = start
    else:
      if (request.method == 'GET'):
-        response = requests[request.path]['response'].get_json()
-        response['state'] = 'Old'
-        response.data = json.dumps(response)
-        requests[request.path]['response'] = response.data = json.dumps(response)
-        return requests[request.path]['response']
+        if ( requests[request.path]['response'] != '0'):
+          response = requests[request.path]['response'].get_json()
+          response['state'] = 'Old'
+          response.data = json.dumps(response)
+          requests[request.path]['response'] = response.data = json.dumps(response)
+          return requests[request.path]['response']
+        else:
+          return requests[request.path]['response']
      else:
         return "You already sent a request!"
  else:
