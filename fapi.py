@@ -24,6 +24,7 @@ from secrets import token_hex
 from ioperf import ioperf
 from time import time as timestamp
 import logmsg
+import json
 
 getalltimestamp = 0
 
@@ -121,21 +122,27 @@ def before_request():
      requests[request.path]['time'] = start
    else:
      if (request.method == 'GET'):
-       return requests[request.path]['response']
+        response = requests[request.path]['response'].get_json()
+        response['state'] = 'Old'
+        response.data = json.dumps(response)
+        requests[request.path]['response'] = response.data = json.dumps(response)
+        return requests[request.path]['response']
      else:
-       return "You already sent a request!"
+        return "You already sent a request!"
  else:
    requests[request.path] = {'time': 0, 'response': 0}
    requests[request.path]['time'] = start
 @app.after_request   
 def after_request_callback(response):   
  if (request.method == 'GET'):
-   requests[request.path]['response'] = response.get_data() 
- return response  
-# @app.after_request
-# def after_request(response):
-#   if (request.method == 'GET'):
-#     requests[request.path]['response'] = response
+    res = requests[request.path]['response'].get_json()
+    try:
+       if (res['state'] != 'Old'):
+          requests[request.path]['response'] = response
+    except:
+      pass
+
+ return response
 
 @app.route('/', methods=['GET'])
 def home():
