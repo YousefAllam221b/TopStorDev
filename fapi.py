@@ -118,21 +118,30 @@ def before_request():
   start = time.time()
   if (request.path in requests.keys()):
     if (start - requests[request.path]['time'] >= 20):
-      return start - requests[request.path]['time']
-      #requests[request.path]['time'] = start
+      requests[request.path]['time'] = start
     else:
-      return start - requests[request.path]['time']
-      #if (request.method == 'GET'):
-      #  return "hi " + requests[request.path]['response']
-      #else:
-       # return "You already sent a request!"
-  #else:
-    #requests[request.path] = {'time': 0, 'response': 0}
-   # requests[request.path]['time'] = start
-#@app.after_request
-#def after_request(response):
- # if (request.method == 'GET'):
- #   requests[request.path]['response'] = response
+      if (request.method == 'GET'):
+        return "hi " + requests[request.path]['response']
+      else:
+        return "You already sent a request!"
+  else:
+    requests[request.path] = {'time': 0, 'response': 0}
+    requests[request.path]['time'] = start
+@app.after_request   
+def after_request_callback(response):   
+    response_value = response.get_data()   
+    print( response_value )   
+   
+    response.set_data( response_value + "_changed" ) 
+   
+    response_value = response.get_data()   
+    print( response_value )   
+   
+    return response  
+# @app.after_request
+# def after_request(response):
+#   if (request.method == 'GET'):
+#     requests[request.path]['response'] = response
 
 @app.route('/', methods=['GET'])
 def home():
