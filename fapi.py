@@ -121,7 +121,7 @@ def before_request():
       requests[request.path]['time'] = start
     else:
       if (request.method == 'GET'):
-        return "hi " + requests[request.path]['response']
+        return "hi " + str(requests[request.path]['response'])
       else:
         return "You already sent a request!"
   else:
@@ -129,14 +129,9 @@ def before_request():
     requests[request.path]['time'] = start
 @app.after_request   
 def after_request_callback(response):   
-    response_value = response.get_data()   
-    print( response_value )   
-   
-    response.set_data( response_value + "_changed" ) 
-   
-    response_value = response.get_data()   
-    print( response_value )   
-   
+    if (request.method == 'GET'):
+	    response_value = response.get_data()   
+	    requests[request.path]['response'] = response.get_data() 
     return response  
 # @app.after_request
 # def after_request(response):
