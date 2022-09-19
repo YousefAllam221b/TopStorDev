@@ -122,7 +122,7 @@ def before_request():
      requests[request.path]['time'] = start
    else:
      if (request.method == 'GET'):
-        if ( requests[request.path]['response'] != '0'):
+        if ( requests[request.path]['response'] != 0):
           response = requests[request.path]['response'].get_json()
           response['state'] = 'Old'
           response.data = json.dumps(response)
@@ -139,12 +139,13 @@ def before_request():
 def after_request_callback(response):   
 
   if (request.method == 'GET'):
-    res = requests[request.path]['response'].get_json()
-    try:
-       if (res['state'] != 'Old'):
-          requests[request.path]['response'] = response
-    except:
-      pass
+    if ( requests[request.path]['response'] != 0):
+      res = requests[request.path]['response'].get_json()
+      try:
+        if (res['state'] != 'Old'):
+            requests[request.path]['response'] = response
+      except:
+        pass
 
   return response
 #  if (request.method == 'GET'):
