@@ -113,25 +113,25 @@ def getgroups():
  return groups
 
 
-#@app.before_request
-#def before_request():
-#  start = time.time()
-#  if (request.path in requests.keys()):
-#    if (start - requests[request.path]['time'] >= 20):
-#      requests[request.path]['time'] = start
-#    else:
-#      if (request.method == 'GET'):
-#        return requests[request.path]['response']
-#      else:
-#        return "You already sent a request!"
-#  else:
-#    requests[request.path] = {'time': 0, 'response': 0}
-#    requests[request.path]['time'] = start
-#@app.after_request   
-#def after_request_callback(response):   
-#  if (request.method == 'GET'):
-#    requests[request.path]['response'] = response.get_data() 
-#  return response  
+@app.before_request
+def before_request():
+ start = time.time()
+ if (request.path in requests.keys()):
+   if (start - requests[request.path]['time'] >= 20):
+     requests[request.path]['time'] = start
+   else:
+     if (request.method == 'GET'):
+       return requests[request.path]['response']
+     else:
+       return "You already sent a request!"
+ else:
+   requests[request.path] = {'time': 0, 'response': 0}
+   requests[request.path]['time'] = start
+@app.after_request   
+def after_request_callback(response):   
+ if (request.method == 'GET'):
+   requests[request.path]['response'] = response.get_data() 
+ return response  
 # @app.after_request
 # def after_request(response):
 #   if (request.method == 'GET'):
