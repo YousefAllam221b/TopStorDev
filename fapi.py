@@ -118,12 +118,19 @@ def before_request():
   start = time.time()
   if (request.path in requests.keys()):
     if (start - requests[request.path] >= 20):
-      requests[request.path] = start
+      requests[request.path]['time'] = start
     else:
-      return request.path + ' '.join(requests)
+      if (request.method == 'GET'):
+        return requests[request.path]['response']
+      else:
+        return "You already sent a request!"
   else:
-    requests[request.path] = start
-    
+    requests[request.path]['time'] = start
+@app.after_request
+def after_request(response):
+  if (request.method == 'GET'):
+    requests[request.path]['response'] = response
+
 @app.route('/', methods=['GET'])
 def home():
     return '''<h1>Distant Reading Archive</h1>
