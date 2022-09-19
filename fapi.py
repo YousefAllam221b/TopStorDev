@@ -130,7 +130,7 @@ def before_request():
 @app.after_request   
 def after_request_callback(response):   
  if (request.method == 'GET'):
-   requests[request.path]['response'] = response.get_data() 
+   requests[request.path]['response'] = response
  return response  
 # @app.after_request
 # def after_request(response):
