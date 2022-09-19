@@ -134,7 +134,8 @@ def before_request():
    requests[request.path]['time'] = start
 @app.after_request   
 def after_request_callback(response):   
- if (request.method == 'GET'):
+
+  if (request.method == 'GET'):
     res = requests[request.path]['response'].get_json()
     try:
        if (res['state'] != 'Old'):
@@ -142,7 +143,10 @@ def after_request_callback(response):
     except:
       pass
 
- return response
+  return response
+#  if (request.method == 'GET'):
+#    requests[request.path]['response'] = response
+#  return response  
 
 @app.route('/', methods=['GET'])
 def home():
