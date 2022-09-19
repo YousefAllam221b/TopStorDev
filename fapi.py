@@ -117,7 +117,7 @@ def getgroups():
 def before_request():
   start = time.time()
   if (request.path in requests.keys()):
-    if (start - requests[request.path] >= 20):
+    if (start - requests[request.path]['time'] >= 20):
       requests[request.path]['time'] = start
     else:
       if (request.method == 'GET'):
