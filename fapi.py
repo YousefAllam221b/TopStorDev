@@ -129,10 +129,9 @@ def before_request():
     requests[request.path]['time'] = start
 @app.after_request   
 def after_request_callback(response):   
-    if (request.method == 'GET'):
-	    response_value = response.get_data()   
-	    requests[request.path]['response'] = response.get_data() 
-    return response  
+  if (request.method == 'GET'):
+    requests[request.path]['response'] = response.get_data() 
+  return response  
 # @app.after_request
 # def after_request(response):
 #   if (request.method == 'GET'):
