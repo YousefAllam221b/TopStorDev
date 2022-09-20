@@ -128,10 +128,14 @@ def before_request():
  else:
    requests[request.path] = {'time': 0, 'response': 0}
    requests[request.path]['time'] = start
+import json
 @app.after_request   
 def after_request_callback(response):   
   if (request.method == 'GET'):
     requests[request.path]['response'] = response
+    d = response.get_json()
+    d['requests'] = str(requests)
+    response.data = json.dumps(d)
   return response  
 
 @app.route('/', methods=['GET'])
