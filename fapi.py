@@ -122,10 +122,6 @@ def before_request():
      requests[request.path]['time'] = start
    else:
      if (request.method == 'GET'):
-        response = requests[request.path]['response'].get_json()
-        response['state'] = 'Old'
-        response.data = json.dumps(response)
-        requests[request.path]['response'] = response.data = json.dumps(response)
         return requests[request.path]['response']
      else:
         return "You already sent a request!"
@@ -134,19 +130,9 @@ def before_request():
    requests[request.path]['time'] = start
 @app.after_request   
 def after_request_callback(response):   
-
   if (request.method == 'GET'):
-    res = requests[request.path]['response'].get_json()
-    try:
-       if (res['state'] != 'Old'):
-          requests[request.path]['response'] = response
-    except:
-      pass
-
-  return response
-#  if (request.method == 'GET'):
-#    requests[request.path]['response'] = response
-#  return response  
+    requests[request.path]['response'] = response
+  return response  
 
 @app.route('/', methods=['GET'])
 def home():
