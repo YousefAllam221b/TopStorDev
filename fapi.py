@@ -117,21 +117,27 @@ def getgroups():
 @app.before_request
 def before_request():
  start = time.time()
+ # First checks if there the incoming request has been received before.
  if (request.path in requests.keys()):
+   # If the request has been recieved, it checks it 20 seconds has passed since the previous request came.
    if (start - requests[request.path]['time'] >= 20):
+     # If yes, then it records the time and let the request pass.
      requests[request.path]['time'] = start
    else:
      if (request.method == 'GET'):
+        # If not, then it the request was a GET then it just responds with the last recorded repsonse for that request.
         return requests[request.path]['response']
      else:
         return "You already sent a request!"
  else:
+   # If it is a new request, then a record in the responses dict is added where the key is the request url and the value is the time and the previous recorded repsonse.
    requests[request.path] = {'time': 0, 'response': 0}
    requests[request.path]['time'] = start
-import json
+
 @app.after_request   
 def after_request_callback(response):   
   if (request.method == 'GET'):
+    # If the response was a GET, the new response is recorded. If it was not a GET, we currently don't care about the response.
     requests[request.path]['response'] = response
     d = response.get_json()
     d['requests'] = str(requests)
